@@ -24,12 +24,13 @@ toggleTopCanvas = 0
 isExit = False
 lastX = -1
 lastY = -1
+
 # 計數器
 count = 0
 
 # 創建主視窗
 root = tk.Tk()
-root.geometry("600x500")
+root.geometry("600x600")
 
 
 
@@ -92,7 +93,10 @@ def showData(delayTime = 50):
     global fileNo
     global fileCount
     global loadFolderNameInput
+    canvasAlpha = canvasAlphaInput.get()
+
     datas = []
+    specificFile = specificFileInput.get()
 
     # 總檔案數 迴圈抓取檔案存取
     for fileNo in range(0,fileCount):
@@ -106,13 +110,23 @@ def showData(delayTime = 50):
         return None
     else :
         root.title("繪畫中")
-
-    for colorIdx , data in enumerate(datas):
+    if (specificFile == ""):
+        print("alll")
+        for colorIdx , data in enumerate(datas):
+            # 畫畫
+            for idx, x in enumerate(data):
+                root.after(delayTime ,drawCanvas(colorIdx , idx , canvasAlpha, data))
+                canvas.update()
+                topLevel.title(data[idx]["Time"])
+    else:
+        data = datas[int(specificFile)]
         # 畫畫
         for idx, x in enumerate(data):
-            root.after(delayTime ,drawCanvas(colorIdx , idx , data))
+            root.after(delayTime ,drawCanvas(2 , idx ,"gray75", data))
             canvas.update()
             topLevel.title(data[idx]["Time"])
+
+            
             
     topLevel.title(f"完成、共讀取{fileCount}個檔案")
     root.title(f"完成、共讀取{fileCount}個檔案")
@@ -124,24 +138,26 @@ def clearCanvas():
     topLevel.title("畫布已清空")
     root.title("畫布已清空")
 
-def drawCanvas(colorIdx , idx,data):
+def drawCanvas(colorIdx , idx , stipple,data):
     global lastX
     global lastY
     global canvas
     global posFix
+
+    print(idx)
+
     if (lastX == -1):
         lastX = int(int(data[idx]["x"]) * posFix)
         lastY = int(int(data[idx]["y"]) * posFix)
     else:
-        print(idx)
         dataX_2 = int(int(data[idx]["x"]) * posFix)
         dataY_2 = int(int(data[idx]["y"]) * posFix)
         colorCode = colorList[colorIdx % 5]
         if (data[idx]["isClick"] == "1"):
-            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}")
-            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 1, dataY_2 + 1, width=40, fill=f"{colorCode}" ,outline=f"{colorCode}")
+            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" , stipple = stipple)
+            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 5, dataY_2 + 5, width=30, fill=f"{colorCode}" ,outline=f"{colorCode}" , stipple = stipple)
         else:
-            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}")
+            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" ,stipple = stipple)
 
 
         lastX = int(int(data[idx]["x"]) * posFix)
@@ -153,6 +169,8 @@ def save_data():
     for i in range(1, 6):
         data[f"color_{i}"] = inputs[i-1].get()
     data["loadFolderNameInput"] = loadFolderNameInput.get()
+    data["canvasAlphaInput"] = canvasAlphaInput.get()
+    data["specificFileInput"] = specificFileInput.get()
     with open('config.json', 'w') as f:
         json.dump(data, f)
     print("Data saved.")
@@ -175,6 +193,12 @@ def load_data():
 
         loadFolderNameInput.delete(0, 'end')
         loadFolderNameInput.insert(0, data["loadFolderNameInput"])
+
+        canvasAlphaInput.delete(0 , "end")
+        canvasAlphaInput.insert(0, data["canvasAlphaInput"])
+
+        specificFileInput.delete(0 , "end")
+        specificFileInput.insert(0, data["specificFileInput"])
 
         fileCount = 0
         for file in os.listdir(f'./{data["loadFolderNameInput"]}'):
@@ -237,6 +261,19 @@ label.pack(padx=5, pady=5)
 loadFolderNameInput = tk.Entry(root)  
 loadFolderNameInput.pack(padx=5, pady=5)
 
+# 透明度
+label = tk.Label(root, text="透明度")
+label.pack(padx=5, pady=5)
+
+canvasAlphaInput = tk.Entry(root)  
+canvasAlphaInput.pack(padx=5, pady=5)
+
+# 指定檔案讀取
+label = tk.Label(root, text="指定檔案讀取")
+label.pack(padx=5, pady=5)
+
+specificFileInput = tk.Entry(root)  
+specificFileInput.pack(padx=5, pady=5)
 
 def do_zoom(event):
     global canvas

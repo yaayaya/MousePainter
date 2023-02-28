@@ -13,10 +13,6 @@ colorList = ["#BABDBF" , "#3F7373", "#BF754B", "#A64826" ,"#732B1A"]
 posFix = 0.7
 
 fileCount = 0
-
-for file in os.listdir("./log"):
-    if file.endswith(".txt"):
-        fileCount += 1
                         
 
 
@@ -142,10 +138,10 @@ def drawCanvas(colorIdx , idx,data):
         dataY_2 = int(int(data[idx]["y"]) * posFix)
         colorCode = colorList[colorIdx % 5]
         if (data[idx]["isClick"] == "1"):
-            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=3 , fill=f"{colorCode}")
-            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 1, dataY_2 + 1, width=8, fill=f"{colorCode}" ,outline=f"{colorCode}")
+            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}")
+            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 1, dataY_2 + 1, width=40, fill=f"{colorCode}" ,outline=f"{colorCode}")
         else:
-            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=3 , fill=f"{colorCode}")
+            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}")
 
 
         lastX = int(int(data[idx]["x"]) * posFix)
@@ -164,7 +160,10 @@ def save_data():
 def load_data():
     global colorList
     global loadFolderNameInput
+    global fileCount
     colorList = []
+
+
     try:
         with open('config.json', 'r') as f:
             data = json.load(f)
@@ -172,10 +171,16 @@ def load_data():
             inputs[i-1].delete(0, 'end')
             inputs[i-1].insert(0, data[f"color_{i}"])
             colorList.append(data[f"color_{i}"])
+        
 
         loadFolderNameInput.delete(0, 'end')
         loadFolderNameInput.insert(0, data["loadFolderNameInput"])
 
+        fileCount = 0
+        for file in os.listdir(f'./{data["loadFolderNameInput"]}'):
+            if file.endswith(".txt"):
+                fileCount += 1 
+        
         print("Data loaded.")
     except FileNotFoundError:
         print("Data file not found.")

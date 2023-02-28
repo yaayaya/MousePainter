@@ -129,7 +129,7 @@ label.pack(side=tk.LEFT,padx=10, pady=10)
 
 splitTime = tk.Entry(root , width=5)  
 splitTime.pack(side=tk.LEFT,padx=10, pady=10 )
-splitTime.insert(0, 900)
+splitTime.insert(0, 600)
 
 label = tk.Label(root, text="儲存的資料夾名稱")
 label.pack(side=tk.LEFT,padx=10, pady=10)

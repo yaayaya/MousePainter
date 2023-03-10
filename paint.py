@@ -10,7 +10,7 @@ import json
 
 # 顏色列表
 colorList = ["#BABDBF" , "#3F7373", "#BF754B", "#A64826" ,"#732B1A"]
-posFix = 0.7
+posFix = None
 
 fileCount = 0
                         
@@ -25,12 +25,16 @@ isExit = False
 lastX = -1
 lastY = -1
 
+# 螢幕解析度
+screenSizeX = None
+screenSizeY = None
+
 # 計數器
 count = 0
 
 # 創建主視窗
 root = tk.Tk()
-root.geometry("600x600")
+root.geometry("600x680")
 
 
 
@@ -39,6 +43,7 @@ def toggleCanvas():
     global canvas
     global toggleTopCanvas
     global topLevel
+
     if (toggleTopCanvas == 0):
         top = tk.Toplevel(root, width = 1920, height = 1080)
         # top.title("Second window")
@@ -52,7 +57,7 @@ def toggleCanvas():
         top.bind("<F1>" , lambda event: toggleCanvas())
         top.bind("<F2>" , lambda event: showData())
         top.bind("<F3>" , lambda event: showData(17))
-        top.bind("<F4>" , lambda event: showData(0))
+        top.bind("<F4>" , lambda event: showData(1))
         top.bind("<F5>" , lambda event: clearCanvas())
         top.bind("<F7>" , lambda event: toggle_fullscreen(cc))
         top.bind("<F8>" , lambda event: toggle_titlebar(cc))
@@ -93,6 +98,7 @@ def showData(delayTime = 50):
     global fileNo
     global fileCount
     global loadFolderNameInput
+
     canvasAlpha = canvasAlphaInput.get()
 
     datas = []
@@ -144,8 +150,6 @@ def drawCanvas(colorIdx , idx , stipple,data):
     global canvas
     global posFix
 
-    print(idx)
-
     if (lastX == -1):
         lastX = int(int(data[idx]["x"]) * posFix)
         lastY = int(int(data[idx]["y"]) * posFix)
@@ -155,8 +159,11 @@ def drawCanvas(colorIdx , idx , stipple,data):
         colorCode = colorList[colorIdx % 5]
         if (data[idx]["isClick"] == "1"):
             canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" , stipple = stipple)
-            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 5, dataY_2 + 5, width=30, fill=f"{colorCode}" ,outline=f"{colorCode}" , stipple = stipple)
+            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 5, dataY_2 + 5, width= int(screenSizeY_Input.get()), fill=f"{colorCode}" ,outline=f"{colorCode}" , stipple = stipple)
         else:
+            if (lastX == dataX_2 and lastY == dataY_2):
+                return
+            
             canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" ,stipple = stipple)
 
 
@@ -170,15 +177,20 @@ def save_data():
         data[f"color_{i}"] = inputs[i-1].get()
     data["loadFolderNameInput"] = loadFolderNameInput.get()
     data["canvasAlphaInput"] = canvasAlphaInput.get()
+    data["screenSizeX_Input"] = screenSizeX_Input.get()
+    data["screenSizeY_Input"] = screenSizeY_Input.get()
     data["specificFileInput"] = specificFileInput.get()
+
     with open('config.json', 'w') as f:
         json.dump(data, f)
     print("Data saved.")
+    load_data()
 
 def load_data():
     global colorList
     global loadFolderNameInput
     global fileCount
+
     colorList = []
 
 
@@ -197,6 +209,12 @@ def load_data():
         canvasAlphaInput.delete(0 , "end")
         canvasAlphaInput.insert(0, data["canvasAlphaInput"])
 
+        screenSizeX_Input.delete(0 , "end")
+        screenSizeX_Input.insert(0, data["screenSizeX_Input"])
+
+        screenSizeY_Input.delete(0 , "end")
+        screenSizeY_Input.insert(0, data["screenSizeY_Input"])
+
         specificFileInput.delete(0 , "end")
         specificFileInput.insert(0, data["specificFileInput"])
 
@@ -205,6 +223,8 @@ def load_data():
             if file.endswith(".txt"):
                 fileCount += 1 
         
+        global posFix
+        posFix = 1920/int(screenSizeX_Input.get())
         print("Data loaded.")
     except FileNotFoundError:
         print("Data file not found.")
@@ -267,6 +287,18 @@ label.pack(padx=5, pady=5)
 
 canvasAlphaInput = tk.Entry(root)  
 canvasAlphaInput.pack(padx=5, pady=5)
+
+# 螢幕解析度
+label = tk.Label(root, text="目標螢幕解析度 X")
+label.pack(padx=5, pady=5)
+
+screenSizeX_Input = tk.Entry(root)  
+screenSizeX_Input.pack(padx=5, pady=5)
+
+label = tk.Label(root, text="圓點大小")
+label.pack(padx=5, pady=5)
+screenSizeY_Input = tk.Entry(root)  
+screenSizeY_Input.pack(padx=5, pady=5)
 
 # 指定檔案讀取
 label = tk.Label(root, text="指定檔案讀取")

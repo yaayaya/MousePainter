@@ -15,6 +15,9 @@ posFix = None
 fileCount = 0
                         
 
+dataCount = 0
+colorChangeTime = 2400
+oralWidth = 12
 
 current_time = datetime.now().strftime('%H:%M %S')
 canvas = None
@@ -34,7 +37,7 @@ count = 0
 
 # 創建主視窗
 root = tk.Tk()
-root.geometry("600x680")
+root.geometry("600x750")
 
 
 
@@ -47,7 +50,7 @@ def toggleCanvas():
     if (toggleTopCanvas == 0):
         top = tk.Toplevel(root, width = 1920, height = 1080)
         # top.title("Second window")
-        top.bind("<Escape>", lambda e: top.destroy())
+        top.bind("<Escape>", lambda e: toggleCanvas())
         cc = Canvas(top, width=1920, height=1080 ,background="white")
         cc.pack(fill="both", expand=True)
         cc.bind("<MouseWheel>", do_zoom)
@@ -68,6 +71,7 @@ def toggleCanvas():
     else :
         topLevel.destroy()
         toggleTopCanvas = 0
+        root.title("Mouse Painter")
 
 # 定義函式以讀取txt檔案
 def read_txt_file(completeName):
@@ -98,6 +102,8 @@ def showData(delayTime = 50):
     global fileNo
     global fileCount
     global loadFolderNameInput
+    global dataCount
+    colorIdx = 0
 
     canvasAlpha = canvasAlphaInput.get()
 
@@ -118,9 +124,13 @@ def showData(delayTime = 50):
         root.title("繪畫中")
     if (specificFile == ""):
         print("alll")
-        for colorIdx , data in enumerate(datas):
+        for i ,data in enumerate(datas):
             # 畫畫
             for idx, x in enumerate(data):
+                dataCount += 1
+                if (dataCount >= colorChangeTime):
+                    colorIdx +=1
+                    dataCount = 0
                 root.after(delayTime ,drawCanvas(colorIdx , idx , canvasAlpha, data))
                 canvas.update()
                 topLevel.title(data[idx]["Time"])
@@ -159,13 +169,12 @@ def drawCanvas(colorIdx , idx , stipple,data):
         colorCode = colorList[colorIdx % 5]
         if (data[idx]["isClick"] == "1"):
             canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" , stipple = stipple)
-            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 5, dataY_2 + 5, width= int(screenSizeY_Input.get()), fill=f"{colorCode}" ,outline=f"{colorCode}" , stipple = stipple)
+            canvas.create_oval(dataX_2, dataY_2, dataX_2 + 5, dataY_2 + 5, width= int(oralWidth_Input.get()), fill=f"{colorCode}" ,outline=f"{colorCode}" , stipple = stipple)
         else:
             if (lastX == dataX_2 and lastY == dataY_2):
                 return
             
-            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" ,stipple = stipple)
-
+            canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" ,  stipple = stipple )
 
         lastX = int(int(data[idx]["x"]) * posFix)
         lastY = int(int(data[idx]["y"]) * posFix)
@@ -178,8 +187,9 @@ def save_data():
     data["loadFolderNameInput"] = loadFolderNameInput.get()
     data["canvasAlphaInput"] = canvasAlphaInput.get()
     data["screenSizeX_Input"] = screenSizeX_Input.get()
-    data["screenSizeY_Input"] = screenSizeY_Input.get()
+    data["oralWidth_Input"] = oralWidth_Input.get()
     data["specificFileInput"] = specificFileInput.get()
+    data["colorChangeTime_Input"] = colorChangeTime_Input.get()
 
     with open('config.json', 'w') as f:
         json.dump(data, f)
@@ -190,9 +200,8 @@ def load_data():
     global colorList
     global loadFolderNameInput
     global fileCount
-
+    global colorChangeTime
     colorList = []
-
 
     try:
         with open('config.json', 'r') as f:
@@ -212,11 +221,17 @@ def load_data():
         screenSizeX_Input.delete(0 , "end")
         screenSizeX_Input.insert(0, data["screenSizeX_Input"])
 
-        screenSizeY_Input.delete(0 , "end")
-        screenSizeY_Input.insert(0, data["screenSizeY_Input"])
+        oralWidth_Input.delete(0 , "end")
+        oralWidth_Input.insert(0, data["oralWidth_Input"])
+        oralWidth = int(oralWidth_Input.get())
 
         specificFileInput.delete(0 , "end")
         specificFileInput.insert(0, data["specificFileInput"])
+
+        colorChangeTime_Input.delete(0 , "end")
+        colorChangeTime_Input.insert(0, data["colorChangeTime_Input"])
+        colorChangeTime = int(colorChangeTime_Input.get()) * 20
+
 
         fileCount = 0
         for file in os.listdir(f'./{data["loadFolderNameInput"]}'):
@@ -297,8 +312,13 @@ screenSizeX_Input.pack(padx=5, pady=5)
 
 label = tk.Label(root, text="圓點大小")
 label.pack(padx=5, pady=5)
-screenSizeY_Input = tk.Entry(root)  
-screenSizeY_Input.pack(padx=5, pady=5)
+oralWidth_Input = tk.Entry(root)  
+oralWidth_Input.pack(padx=5, pady=5)
+
+label = tk.Label(root, text="顏色交換時間(秒)")
+label.pack(padx=5, pady=5)
+colorChangeTime_Input = tk.Entry(root)  
+colorChangeTime_Input.pack(padx=5, pady=5)
 
 # 指定檔案讀取
 label = tk.Label(root, text="指定檔案讀取")
@@ -323,7 +343,7 @@ def toggle_titlebar(self, event=None):
     self.master.overrideredirect(not self.master.overrideredirect())
 
 
-
+root.title("Mouse Painter")
 root.protocol("WM_DELETE_WINDOW", on_closing)
 load_data()
 

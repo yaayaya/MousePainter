@@ -9,7 +9,7 @@ import json
 
 
 # 顏色列表
-colorList = ["#BABDBF" , "#3F7373", "#BF754B", "#A64826" ,"#732B1A"]
+colorList = ["" , "", "", "" ,"","","",""]
 posFix = None
 
 fileCount = 0
@@ -37,7 +37,7 @@ count = 0
 
 # 創建主視窗
 root = tk.Tk()
-root.geometry("600x750")
+root.geometry("600x980")
 
 
 
@@ -51,7 +51,7 @@ def toggleCanvas():
         top = tk.Toplevel(root, width = 1920, height = 1080)
         # top.title("Second window")
         top.bind("<Escape>", lambda e: toggleCanvas())
-        cc = Canvas(top, width=1920, height=1080 ,background="white")
+        cc = Canvas(top, width=1920, height=1080 ,background=backgroundColorInput.get(), highlightthickness=1, highlightbackground=backgroundColorInput.get())
         cc.pack(fill="both", expand=True)
         cc.bind("<MouseWheel>", do_zoom)
         cc.bind('<ButtonPress-1>', lambda event: canvas.scan_mark(event.x, event.y))
@@ -166,7 +166,7 @@ def drawCanvas(colorIdx , idx , stipple,data):
     else:
         dataX_2 = int(int(data[idx]["x"]) * posFix)
         dataY_2 = int(int(data[idx]["y"]) * posFix)
-        colorCode = colorList[colorIdx % 5]
+        colorCode = colorList[colorIdx % 8]
         if (data[idx]["isClick"] == "1"):
             canvas.create_line(lastX, lastY, dataX_2, dataY_2, width=12 , fill=f"{colorCode}" , stipple = stipple)
             canvas.create_oval(dataX_2, dataY_2, dataX_2 + 5, dataY_2 + 5, width= int(oralWidth_Input.get()), fill=f"{colorCode}" ,outline=f"{colorCode}" , stipple = stipple)
@@ -182,7 +182,7 @@ def drawCanvas(colorIdx , idx , stipple,data):
 # 儲存、讀取
 def save_data():
     data = {}
-    for i in range(1, 6):
+    for i in range(1, 9):
         data[f"color_{i}"] = inputs[i-1].get()
     data["loadFolderNameInput"] = loadFolderNameInput.get()
     data["canvasAlphaInput"] = canvasAlphaInput.get()
@@ -190,6 +190,7 @@ def save_data():
     data["oralWidth_Input"] = oralWidth_Input.get()
     data["specificFileInput"] = specificFileInput.get()
     data["colorChangeTime_Input"] = colorChangeTime_Input.get()
+    data["backgroundColorInput"] = backgroundColorInput.get()
 
     with open('config.json', 'w') as f:
         json.dump(data, f)
@@ -206,11 +207,13 @@ def load_data():
     try:
         with open('config.json', 'r') as f:
             data = json.load(f)
-        for i in range(1, 6):
+        for i in range(1, 9):
             inputs[i-1].delete(0, 'end')
             inputs[i-1].insert(0, data[f"color_{i}"])
             colorList.append(data[f"color_{i}"])
         
+        backgroundColorInput.delete(0, 'end')
+        backgroundColorInput.insert(0, data["backgroundColorInput"])
 
         loadFolderNameInput.delete(0, 'end')
         loadFolderNameInput.insert(0, data["loadFolderNameInput"])
@@ -281,7 +284,7 @@ root.bind("<F1>" , lambda event: toggleCanvas())
 
 # 顏色
 
-input_labels = ['Color 1:', 'Color 2:', 'Color 3:', 'Color 4:', 'Color 5:']
+input_labels = ['Color 1', 'Color 2', 'Color 3', 'Color 4', 'Color 5', 'Color 6', 'Color 7', 'Color 8']
 inputs = []
 
 for i, label in enumerate(input_labels):
@@ -289,12 +292,22 @@ for i, label in enumerate(input_labels):
     input_box = tk.Entry(root)
     input_box.pack( padx=5, pady=5)
     inputs.append(input_box)
+
+# 背景顏色
+label = tk.Label(root, text="畫布顏色")
+label.pack(padx=5, pady=5)
+
+backgroundColorInput = tk.Entry(root)  
+backgroundColorInput.pack(padx=5, pady=5)
+    
 # 資料夾名稱
 label = tk.Label(root, text="讀取的資料夾名稱")
 label.pack(padx=5, pady=5)
 
 loadFolderNameInput = tk.Entry(root)  
 loadFolderNameInput.pack(padx=5, pady=5)
+
+
 
 # 透明度
 label = tk.Label(root, text="透明度")
@@ -310,11 +323,13 @@ label.pack(padx=5, pady=5)
 screenSizeX_Input = tk.Entry(root)  
 screenSizeX_Input.pack(padx=5, pady=5)
 
+# 圓點大小
 label = tk.Label(root, text="圓點大小")
 label.pack(padx=5, pady=5)
 oralWidth_Input = tk.Entry(root)  
 oralWidth_Input.pack(padx=5, pady=5)
 
+# 顏色交換時間(秒)
 label = tk.Label(root, text="顏色交換時間(秒)")
 label.pack(padx=5, pady=5)
 colorChangeTime_Input = tk.Entry(root)  
